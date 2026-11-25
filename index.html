@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="History by Ear">
+<title>History by Ear: Dr Thornleigh's history of mankind</title>
+<style>
+:root { color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #000; color: #f4f1e8; font: 1.25rem/1.5 -apple-system, system-ui, sans-serif; }
+header, main { max-width: 46rem; margin: 0 auto; padding: 0 1rem; }
+h1 { font-size: 1.8rem; margin: .8rem 0 .2rem; }
+h2 { font-size: 1.5rem; margin: 1.4rem 0 .5rem; border-top: 2px solid #444; padding-top: .8rem; }
+h3 { font-size: 1.25rem; margin: 1.2rem 0 .4rem; color: #ffd98a; }
+button, select { font: inherit; color: #000; background: #ffd98a; border: 3px solid #ffd98a; border-radius: .8rem; min-height: 3.6rem; padding: .5rem 1rem; margin: .25rem 0; width: 100%; text-align: left; }
+button:focus, select:focus, input:focus, a:focus { outline: 4px solid #6cf; outline-offset: 2px; }
+button.big { min-height: 6rem; font-size: 1.8rem; font-weight: bold; text-align: center; }
+button.quiet { background: #222; color: #f4f1e8; border-color: #555; }
+.row { display: flex; gap: .5rem; flex-wrap: wrap; }
+.row > button { flex: 1 1 45%; }
+fieldset { border: 2px solid #555; border-radius: .8rem; margin: .8rem 0; padding: .4rem .8rem .8rem; }
+legend { font-weight: bold; padding: 0 .3rem; }
+label { display: flex; align-items: center; gap: .8rem; min-height: 3.2rem; padding: .2rem 0; }
+input[type=checkbox], input[type=radio] { width: 1.8rem; height: 1.8rem; flex: none; }
+input[type=range] { width: 100%; height: 3rem; }
+ul.plain { list-style: none; padding: 0; margin: 0; }
+ul.lib > li { border-bottom: 1px solid #333; padding: .5rem 0; }
+.meta { color: #c9c3b3; font-size: 1.05rem; }
+#reader p { margin: .7rem 0; }
+#reader p.aside { font-style: italic; color: #e0d6b8; }
+a { color: #8cf; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <h1>History by Ear: Dr Thornleigh's history of mankind</h1>
+  <p id="now">Loading. One moment, while Dr Thornleigh finds his spectacles.</p>
+</header>
+<main>
+<section id="v-player" aria-labelledby="h-player">
+  <h2 id="h-player" tabindex="-1">Player</h2>
+  <button id="b-play" class="big">Play</button>
+  <p id="journey" class="meta"></p>
+  <div class="row">
+    <button id="b-prev">Previous piece</button>
+    <button id="b-next">Next piece</button>
+    <button id="b-pback">Back one paragraph</button>
+    <button id="b-pfwd">Forward one paragraph</button>
+  </div>
+  <button id="b-what">What's playing, and how far along?</button>
+  <button id="b-readnow" class="quiet">Read the text of this piece on screen or braille</button>
+  <label for="s-sleep">Sleep timer</label>
+  <select id="s-sleep">
+    <option value="off">Sleep timer off: keep playing</option>
+    <option value="15">Stop after 15 minutes</option>
+    <option value="30">Stop after 30 minutes</option>
+    <option value="60">Stop after 1 hour</option>
+    <option value="90">Stop after an hour and a half</option>
+    <option value="120">Stop after 2 hours</option>
+    <option value="end">Stop at the end of this piece</option>
+  </select>
+  <h3>Coming up next</h3>
+  <ol id="upnext"></ol>
+</section>
+
+<section id="v-modes" aria-labelledby="h-modes">
+  <h2 id="h-modes" tabindex="-1">Choose a journey</h2>
+  <p class="meta">Tap a journey and Dr Thornleigh begins at once. Every journey plays by itself for hours; the shuffles reshuffle and carry on when they run out.</p>
+  <label><input type="checkbox" id="s-readings" checked> Include the readings from the Encyclopaedia of the future (Wikipedia's words) as well as Dr Thornleigh's own essays</label>
+  <div id="modes-main"></div>
+  <h3>By theme, shuffled</h3>
+  <div id="modes-themes"></div>
+  <h3>People and places, shuffled</h3>
+  <div id="modes-pp"></div>
+</section>
+
+<section id="v-library" aria-labelledby="h-library">
+  <h2 id="h-library" tabindex="-1">Library: every piece, in order of time</h2>
+  <p class="meta">Each piece has a Play button, which plays the Grand Journey from that point, and a Read button, which shows its text.</p>
+  <div id="library"></div>
+</section>
+
+<section id="v-reader" aria-labelledby="h-reader" hidden>
+  <h2 id="h-reader" tabindex="-1">Reading</h2>
+  <button id="b-closeread" class="quiet">Close the text and go back</button>
+  <div id="reader"></div>
+  <button id="b-closeread2" class="quiet">Close the text and go back</button>
+</section>
+
+<section id="v-settings" aria-labelledby="h-settings">
+  <h2 id="h-settings" tabindex="-1">Settings</h2>
+  <label for="s-voice">Voice</label>
+  <select id="s-voice"></select>
+  <label for="s-rate" id="l-rate">Speaking speed</label>
+  <input type="range" id="s-rate" min="0.5" max="1.4" step="0.05">
+  <label for="s-gap">Pause between pieces</label>
+  <select id="s-gap"><option value="1">1 second</option><option value="3">3 seconds</option><option value="6">6 seconds</option><option value="12">12 seconds</option></select>
+  <label><input type="checkbox" id="s-titles"> Announce the title and length of each piece before it begins</label>
+  <label><input type="checkbox" id="s-wake"> Keep the screen awake while playing</label>
+  <label><input type="checkbox" id="s-keep"> Experimental: play a near-silent sound in the background, which may help the iPhone keep going when the screen locks</label>
+  <button id="b-test" class="quiet">Test the voice</button>
+  <button id="b-save" class="quiet">Save every piece on this phone for listening without internet</button>
+  <button id="b-forget" class="quiet">Forget where I was and start again</button>
+</section>
+
+<section id="v-about" aria-labelledby="h-about">
+  <h2 id="h-about" tabindex="-1">About Dr Thornleigh, and credits</h2>
+  <div id="about"></div>
+  <h3>Credits and licences</h3>
+  <div id="credits"></div>
+</section>
+<div id="live" class="sr-only" aria-live="polite"></div>
+</main>
+<script>// History by Ear: playlist logic, shuffling, text chunking and resume. Works in the browser (window.HBCore) and in Node (tests).
+(function (root) {
+  'use strict';
+  const MODES = [
+    { id: 'journey', name: 'The Grand Chronological Journey', desc: 'Everything in order of time, from the first stone tools to the thinking machines. Each essay is followed by its Encyclopaedia readings.', order: 'time' },
+    { id: 'surprise', name: 'Surprise me: a long shuffle of everything', desc: 'All of history in a random order, reshuffled when it runs out, so it never stops.', order: 'shuffle' },
+    { id: 'essays', name: "Dr Thornleigh's own essays only, in order of time", desc: 'Only his own words, from the deep past to the present, with no Encyclopaedia readings.', order: 'time', essaysOnly: true },
+    { id: 'essays-shuffle', name: "Dr Thornleigh's own essays only, shuffled", desc: 'Only his own words, in a random order, reshuffled when they run out.', order: 'shuffle', essaysOnly: true },
+    { id: 'origins', name: 'The deep origins of mankind', theme: 'origins', order: 'shuffle', desc: 'Fire, stone, speech, the burial of the dead, the painted caves and the first farmers.' },
+    { id: 'inventions', name: 'Inventions and technology', theme: 'inventions', order: 'shuffle', desc: 'From the hand-axe and the wheel to the steam engine, the telephone, the computer and the internet.' },
+    { id: 'customs', name: 'Habits and customs', theme: 'customs', order: 'shuffle', desc: 'How peoples took up new ways of living: the hearth, farming, coffee and tea, cities, the electric light.' },
+    { id: 'beliefs', name: 'Beliefs, laws and ideas', theme: 'beliefs', order: 'shuffle', desc: 'Religions, philosophies, laws, democracy, the Enlightenment and the rights of man and woman.' },
+    { id: 'empires', name: 'Empires, wars and revolutions', theme: 'empires', order: 'shuffle', desc: 'Egypt, Rome, the Mongols, the great revolutions and the World Wars.' },
+    { id: 'science', name: 'Science and medicine', theme: 'science', order: 'shuffle', desc: 'From the House of Wisdom to Newton, Darwin, germs, penicillin, the atom and artificial intelligence.' },
+    { id: 'trade', name: 'Trade, money and work', theme: 'trade', order: 'shuffle', desc: 'Money, the Silk Road, the voyages of discovery, the slave trade and the factory.' },
+    { id: 'people', name: 'People', theme: 'people', order: 'shuffle', desc: 'Lives of remarkable men and women: Confucius, the Buddha, Socrates, Alexander, Caesar, Newton, Darwin, Turing and more.' },
+    { id: 'places', name: 'Places', theme: 'places', order: 'shuffle', desc: 'Great places of the past: the painted caves, Mesopotamia, Egypt, the Indus cities, Athens, the Great Wall, Constantinople and more.' },
+    { id: 'chrono-themes', name: 'A journey through time, one theme at a time', order: 'theme-time', desc: 'Each theme in turn, chosen at random, told in order of time within the theme, then on to the next theme.' }
+  ];
+  const THEMES = ['origins', 'inventions', 'customs', 'beliefs', 'empires', 'science', 'trade', 'people', 'places'];
+
+  // small seeded random generator so a shuffle can be rebuilt and tested
+  function rng(seed) { let a = (seed >>> 0) || 1; return function () { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  function shuffle(arr, rand) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+
+  function byTime(a, b) { return a.y - b.y || (a.u < b.u ? -1 : a.u > b.u ? 1 : 0) || a.o - b.o; }
+  // group pieces into units: an essay followed by its readings, kept together
+  function units(pieces) {
+    const m = new Map();
+    pieces.forEach(p => { if (!m.has(p.u)) m.set(p.u, []); m.get(p.u).push(p); });
+    const out = [...m.values()].map(u => u.sort((a, b) => a.o - b.o));
+    return out.sort((a, b) => a[0].y - b[0].y || (a[0].u < b[0].u ? -1 : 1));
+  }
+  function special(p) { return p.th.includes('intro') || p.id === 'es-52'; }
+  function eligible(pieces, mode, opts) {
+    const readings = !opts || opts.readings !== false;
+    return pieces.filter(p => (p.k === 'essay' || (readings && !mode.essaysOnly)) && (!mode.essaysOnly || p.k === 'essay'));
+  }
+  // Build the list of piece ids for a mode. For shuffles, units stay together (essay first, then its readings).
+  function build(pieces, modeId, opts) {
+    opts = opts || {};
+    const mode = MODES.find(m => m.id === modeId) || MODES[0];
+    const rand = rng(opts.seed || Date.now());
+    let pool = eligible(pieces, mode, opts);
+    if (mode.order === 'time') return units(pool).flat().map(p => p.id);
+    if (mode.order === 'theme-time') {
+      pool = pool.filter(p => !special(p));
+      const out = []; const seen = new Set();
+      shuffle(THEMES, rand).forEach(th => units(pool.filter(p => p.th.includes(th))).flat().forEach(p => { if (!seen.has(p.id)) { seen.add(p.id); out.push(p.id); } }));
+      return out;
+    }
+    pool = pool.filter(p => !special(p));
+    if (mode.theme) pool = pool.filter(p => p.th.includes(mode.theme));
+    let us = shuffle(units(pool), rand);
+    if (opts.avoidFirst && us.length > 1 && us[0].some(p => p.id === opts.avoidFirst)) us.push(us.shift());
+    return us.flat().map(p => p.id);
+  }
+  function loops(modeId) { const m = MODES.find(x => x.id === modeId); return !!m && (m.order === 'shuffle' || m.order === 'theme-time'); }
+  function minutesOf(pieces, ids) { const by = {}; pieces.forEach(p => { by[p.id] = p; }); return ids.reduce((n, id) => n + (by[id] ? by[id].m : 0), 0); }
+  function fmtMinutes(m) {
+    m = Math.round(m);
+    if (m < 60) return m + (m === 1 ? ' minute' : ' minutes');
+    const h = Math.floor(m / 60), r = m % 60;
+    const hs = h + (h === 1 ? ' hour' : ' hours');
+    return r ? hs + ' ' + r + (r === 1 ? ' minute' : ' minutes') : hs;
+  }
+  function fmtHours(m) { const h = m / 60; return h >= 10 ? 'about ' + Math.round(h) + ' hours' : h >= 1 ? 'about ' + (Math.round(h * 2) / 2) + ' hours' : fmtMinutes(m); }
+  // split a paragraph into chunks of at most maxChars, at sentence boundaries where possible
+  function chunks(par, maxChars) {
+    maxChars = maxChars || 220;
+    const sents = par.match(/[^.!?]+(?:[.!?]+["')\u201d\u2019]*|$)\s*/g) || [par];
+    const out = []; let cur = '';
+    const pushLong = s => { while (s.length > maxChars) { let cut = s.lastIndexOf(', ', maxChars); if (cut < maxChars / 3) cut = s.lastIndexOf(' ', maxChars); if (cut < 20) cut = maxChars; out.push(s.slice(0, cut + 1).trim()); s = s.slice(cut + 1); } return s; };
+    sents.forEach(s => {
+      if ((cur + s).length <= maxChars) cur += s;
+      else { if (cur.trim()) out.push(cur.trim()); cur = pushLong(s); }
+    });
+    if (cur.trim()) out.push(cur.trim());
+    return out.filter(Boolean);
+  }
+  function paraKind(p) { return p.startsWith('## ') ? 'heading' : p.startsWith('%% ') ? 'aside' : 'text'; }
+  function paraText(p) { return p.replace(/^(## |%% )/, ''); }
+  function encodeResume(r) { return JSON.stringify({ v: 1, mode: r.mode, list: r.list, pos: r.pos, para: r.para, seed: r.seed, at: r.at }); }
+  function decodeResume(s, pieces) {
+    try {
+      const r = typeof s === 'string' ? JSON.parse(s) : s; if (!r || r.v !== 1 || !Array.isArray(r.list) || !r.list.length) return null;
+      const ids = new Set(pieces.map(p => p.id)); const list = r.list.filter(id => ids.has(id)); if (!list.length) return null;
+      const pos = Math.min(Math.max(0, r.pos | 0), list.length - 1);
+      return { mode: MODES.some(m => m.id === r.mode) ? r.mode : 'journey', list, pos, para: Math.max(0, r.para | 0), seed: r.seed, at: r.at };
+    } catch (e) { return null; }
+  }
+  function era(y) {
+    if (y < -10000) return 'The deep past, before farming';
+    if (y < -500) return 'The first farmers, cities and kingdoms';
+    if (y < 500) return 'The classical world';
+    if (y < 1450) return 'The Middle Ages';
+    if (y < 1750) return 'The early modern world';
+    if (y < 1900) return 'The age of steam and revolution';
+    return 'The twentieth and twenty-first centuries';
+  }
+  const api = { MODES, THEMES, rng, shuffle, units, build, loops, minutesOf, fmtMinutes, fmtHours, chunks, paraKind, paraText, encodeResume, decodeResume, era, byTime };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.HBCore = api;
+})(this);
+</script>
+<script>window.HB_INDEX = {"v": 1, "built": "2026-11-24", "pieces": [{"id": "es-00", "t": "Dr Thornleigh introduces himself, and his curious window upon the future", "k": "essay", "y": -9000000, "th": ["intro"], "u": "es-00", "o": 0, "w": 1082, "m": 7}, {"id": "es-01", "t": "Of the long darkness before history, and of our first ancestors", "k": "essay", "y": -2700000, "th": ["origins", "science"], "u": "es-01", "o": 0, "w": 1419, "m": 9}, {"id": "wp-human-evolution", "t": "Human evolution", "k": "reading", "y": -2500000, "th": ["origins", "science"], "u": "es-01", "o": 1, "w": 4661, "m": 31, "src": "https://en.wikipedia.org/wiki/Human_evolution", "rev": 1385953151, "tr": true}, {"id": "es-02", "t": "Of the hand-axe, and the patience of stone", "k": "essay", "y": -2600001, "th": ["origins", "inventions"], "u": "es-02", "o": 0, "w": 1119, "m": 7}, {"id": "wp-stone-tool", "t": "Stone tool", "k": "reading", "y": -2600000, "th": ["origins", "inventions"], "u": "es-02", "o": 1, "w": 3360, "m": 22, "src": "https://en.wikipedia.org/wiki/Stone_tool", "rev": 1385829873, "tr": false}, {"id": "es-03", "t": "Of fire, and the first hearth", "k": "essay", "y": -1000000, "th": ["origins", "inventions", "customs"], "u": "es-03", "o": 0, "w": 1049, "m": 7}, {"id": "wp-control-of-fire-by-early-humans", "t": "Control of fire by early humans", "k": "reading", "y": -1000000, "th": ["origins", "inventions", "customs"], "u": "es-03", "o": 1, "w": 4350, "m": 29, "src": "https://en.wikipedia.org/wiki/Control_of_fire_by_early_humans", "rev": 1381245375, "tr": false}, {"id": "es-04", "t": "Of speech, the invisible invention, and of minds grown modern", "k": "essay", "y": -150000, "th": ["origins", "beliefs", "customs"], "u": "es-04", "o": 0, "w": 955, "m": 6}, {"id": "wp-origin-of-language", "t": "Origin of language", "k": "reading", "y": -150000, "th": ["origins", "beliefs"], "u": "es-04", "o": 1, "w": 4527, "m": 30, "src": "https://en.wikipedia.org/wiki/Origin_of_language", "rev": 1383116283, "tr": true}, {"id": "wp-behavioral-modernity", "t": "Behavioral modernity", "k": "reading", "y": -60000, "th": ["origins", "customs"], "u": "es-04", "o": 2, "w": 4000, "m": 27, "src": "https://en.wikipedia.org/wiki/Behavioral_modernity", "rev": 1383978261, "tr": false}, {"id": "es-05", "t": "Of the burial of the dead, and the discovery that man is not as the beasts", "k": "essay", "y": -100000, "th": ["origins", "beliefs", "customs"], "u": "es-05", "o": 0, "w": 1162, "m": 8}, {"id": "wp-paleolithic-religion", "t": "Paleolithic religion", "k": "reading", "y": -100000, "th": ["origins", "beliefs", "customs"], "u": "es-05", "o": 1, "w": 2540, "m": 17, "src": "https://en.wikipedia.org/wiki/Paleolithic_religion", "rev": 1382042677, "tr": false}, {"id": "es-06", "t": "Of the painted caves, and the first art of mankind", "k": "essay", "y": -40000, "th": ["origins", "customs", "places"], "u": "es-06", "o": 0, "w": 1012, "m": 7}, {"id": "wp-cave-painting", "t": "Cave painting", "k": "reading", "y": -40000, "th": ["origins", "customs"], "u": "es-06", "o": 1, "w": 4563, "m": 30, "src": "https://en.wikipedia.org/wiki/Cave_painting", "rev": 1385018883, "tr": true}, {"id": "wp-lascaux", "t": "Lascaux", "k": "reading", "y": -17000, "th": ["places", "origins"], "u": "es-06", "o": 2, "w": 3307, "m": 22, "src": "https://en.wikipedia.org/wiki/Lascaux", "rev": 1387044614, "tr": false}, {"id": "es-07", "t": "Of the plough and the granary: how mankind took to farming", "k": "essay", "y": -10000, "th": ["inventions", "customs", "trade", "origins"], "u": "es-07", "o": 0, "w": 1165, "m": 8}, {"id": "wp-neolithic-revolution", "t": "Neolithic Revolution", "k": "reading", "y": -10000, "th": ["inventions", "customs", "trade"], "u": "es-07", "o": 1, "w": 4428, "m": 30, "src": "https://en.wikipedia.org/wiki/Neolithic_Revolution", "rev": 1386419564, "tr": true}, {"id": "wp-domestication-of-animals", "t": "Domestication of vertebrates", "k": "reading", "y": -9000, "th": ["customs", "inventions"], "u": "es-07", "o": 2, "w": 4756, "m": 32, "src": "https://en.wikipedia.org/wiki/Domestication_of_vertebrates", "rev": 1380130289, "tr": true}, {"id": "wp-g-bekli-tepe", "t": "Göbekli Tepe", "k": "reading", "y": -9500, "th": ["places", "beliefs"], "u": "es-07", "o": 3, "w": 4569, "m": 30, "src": "https://en.wikipedia.org/wiki/G%C3%B6bekli_Tepe", "rev": 1385824114, "tr": true}, {"id": "wp-atalh-y-k", "t": "Çatalhöyük", "k": "reading", "y": -7100, "th": ["places", "customs"], "u": "es-07", "o": 4, "w": 2994, "m": 20, "src": "https://en.wikipedia.org/wiki/%C3%87atalh%C3%B6y%C3%BCk", "rev": 1387232782, "tr": false}, {"id": "es-08", "t": "Of the first cities, between the two rivers", "k": "essay", "y": -3500, "th": ["empires", "places", "customs"], "u": "es-08", "o": 0, "w": 1012, "m": 7}, {"id": "wp-mesopotamia", "t": "Mesopotamia", "k": "reading", "y": -3500, "th": ["places", "empires"], "u": "es-08", "o": 1, "w": 4527, "m": 30, "src": "https://en.wikipedia.org/wiki/Mesopotamia", "rev": 1387385371, "tr": true}, {"id": "es-09", "t": "Of writing, the art of speaking to the absent", "k": "essay", "y": -3200, "th": ["inventions", "beliefs"], "u": "es-09", "o": 0, "w": 1105, "m": 7}, {"id": "wp-history-of-writing", "t": "History of writing", "k": "reading", "y": -3200, "th": ["inventions", "beliefs"], "u": "es-09", "o": 1, "w": 4874, "m": 32, "src": "https://en.wikipedia.org/wiki/History_of_writing", "rev": 1382323692, "tr": true}, {"id": "es-10", "t": "Of the wheel, a late and lucky invention", "k": "essay", "y": -3500, "th": ["inventions", "trade"], "u": "es-10", "o": 0, "w": 918, "m": 6}, {"id": "wp-wheel", "t": "Wheel", "k": "reading", "y": -3500, "th": ["inventions"], "u": "es-10", "o": 1, "w": 3220, "m": 21, "src": "https://en.wikipedia.org/wiki/Wheel", "rev": 1384994747, "tr": false}, {"id": "es-11", "t": "Of copper, tin and iron: the ages of metal", "k": "essay", "y": -3300, "th": ["inventions", "trade", "empires"], "u": "es-11", "o": 0, "w": 1072, "m": 7}, {"id": "wp-bronze-age", "t": "Bronze Age", "k": "reading", "y": -3300, "th": ["inventions", "trade"], "u": "es-11", "o": 1, "w": 4517, "m": 30, "src": "https://en.wikipedia.org/wiki/Bronze_Age", "rev": 1387191710, "tr": true}, {"id": "wp-iron-age", "t": "Iron Age", "k": "reading", "y": -1200, "th": ["inventions"], "u": "es-11", "o": 2, "w": 4340, "m": 29, "src": "https://en.wikipedia.org/wiki/Iron_Age", "rev": 1386922265, "tr": false}, {"id": "es-12", "t": "Of Egypt, and the long patience of the Nile", "k": "essay", "y": -3100, "th": ["empires", "places", "beliefs"], "u": "es-12", "o": 0, "w": 1023, "m": 7}, {"id": "wp-ancient-egypt", "t": "Ancient Egypt", "k": "reading", "y": -3100, "th": ["places", "empires"], "u": "es-12", "o": 1, "w": 4672, "m": 31, "src": "https://en.wikipedia.org/wiki/Ancient_Egypt", "rev": 1386464006, "tr": true}, {"id": "es-13", "t": "Of the forgotten cities of the Indus", "k": "essay", "y": -2600, "th": ["places", "trade", "customs"], "u": "es-13", "o": 0, "w": 989, "m": 7}, {"id": "wp-indus-valley-civilisation", "t": "Indus Valley Civilisation", "k": "reading", "y": -2600, "th": ["places", "trade"], "u": "es-13", "o": 1, "w": 4813, "m": 32, "src": "https://en.wikipedia.org/wiki/Indus_Valley_Civilisation", "rev": 1387089616, "tr": true}, {"id": "es-14", "t": "Of law graven in stone: the code of Hammurabi", "k": "essay", "y": -1754, "th": ["beliefs", "empires", "customs"], "u": "es-14", "o": 0, "w": 1033, "m": 7}, {"id": "wp-code-of-hammurabi", "t": "Code of Hammurabi", "k": "reading", "y": -1754, "th": ["beliefs", "empires"], "u": "es-14", "o": 1, "w": 4593, "m": 31, "src": "https://en.wikipedia.org/wiki/Code_of_Hammurabi", "rev": 1384254682, "tr": true}, {"id": "es-15", "t": "Of money, the most trusted of fictions", "k": "essay", "y": -600, "th": ["trade", "inventions", "customs"], "u": "es-15", "o": 0, "w": 1153, "m": 8}, {"id": "wp-history-of-money", "t": "History of money", "k": "reading", "y": -600, "th": ["trade", "inventions"], "u": "es-15", "o": 1, "w": 4715, "m": 31, "src": "https://en.wikipedia.org/wiki/History_of_money", "rev": 1387083763, "tr": true}, {"id": "es-16", "t": "Of the Axial Age, when sages appeared on every side", "k": "essay", "y": -600, "th": ["beliefs", "people"], "u": "es-16", "o": 0, "w": 1191, "m": 8}, {"id": "wp-axial-age", "t": "Axial Age", "k": "reading", "y": -600, "th": ["beliefs"], "u": "es-16", "o": 1, "w": 2283, "m": 15, "src": "https://en.wikipedia.org/wiki/Axial_Age", "rev": 1379564056, "tr": false}, {"id": "wp-confucius", "t": "Confucius", "k": "reading", "y": -551, "th": ["people", "beliefs"], "u": "es-16", "o": 2, "w": 4917, "m": 33, "src": "https://en.wikipedia.org/wiki/Confucius", "rev": 1383616909, "tr": true}, {"id": "wp-the-buddha", "t": "The Buddha", "k": "reading", "y": -480, "th": ["people", "beliefs"], "u": "es-16", "o": 3, "w": 4471, "m": 30, "src": "https://en.wikipedia.org/wiki/The_Buddha", "rev": 1387357316, "tr": true}, {"id": "es-17", "t": "Of Athens, and the experiment of government by the people", "k": "essay", "y": -508, "th": ["beliefs", "empires", "places", "people"], "u": "es-17", "o": 0, "w": 1103, "m": 7}, {"id": "wp-athenian-democracy", "t": "Athenian democracy", "k": "reading", "y": -508, "th": ["beliefs", "empires", "places"], "u": "es-17", "o": 1, "w": 5055, "m": 34, "src": "https://en.wikipedia.org/wiki/Athenian_democracy", "rev": 1386291392, "tr": true}, {"id": "wp-socrates", "t": "Socrates", "k": "reading", "y": -470, "th": ["people", "beliefs"], "u": "es-17", "o": 2, "w": 4646, "m": 31, "src": "https://en.wikipedia.org/wiki/Socrates", "rev": 1385239120, "tr": true}, {"id": "es-18", "t": "Of Alexander, and the world he broke open", "k": "essay", "y": -336, "th": ["people", "empires"], "u": "es-18", "o": 0, "w": 1054, "m": 7}, {"id": "wp-alexander-the-great", "t": "Alexander the Great", "k": "reading", "y": -336, "th": ["people", "empires"], "u": "es-18", "o": 1, "w": 4486, "m": 30, "src": "https://en.wikipedia.org/wiki/Alexander_the_Great", "rev": 1387505035, "tr": true}, {"id": "es-19", "t": "Of the Roman Republic, and how it fell into the hands of one man", "k": "essay", "y": -509, "th": ["empires", "beliefs", "people"], "u": "es-19", "o": 0, "w": 1126, "m": 8}, {"id": "wp-roman-republic", "t": "Roman Republic", "k": "reading", "y": -509, "th": ["empires", "beliefs"], "u": "es-19", "o": 1, "w": 4712, "m": 31, "src": "https://en.wikipedia.org/wiki/Roman_Republic", "rev": 1387454554, "tr": true}, {"id": "wp-julius-caesar", "t": "Julius Caesar", "k": "reading", "y": -100, "th": ["people", "empires"], "u": "es-19", "o": 2, "w": 4860, "m": 32, "src": "https://en.wikipedia.org/wiki/Julius_Caesar", "rev": 1387512576, "tr": true}, {"id": "es-20", "t": "Of the First Emperor, and of the Great Wall of China", "k": "essay", "y": -221, "th": ["empires", "places"], "u": "es-20", "o": 0, "w": 1003, "m": 7}, {"id": "wp-great-wall-of-china", "t": "Great Wall of China", "k": "reading", "y": -221, "th": ["places", "empires"], "u": "es-20", "o": 1, "w": 3435, "m": 23, "src": "https://en.wikipedia.org/wiki/Great_Wall_of_China", "rev": 1384301633, "tr": false}, {"id": "es-21", "t": "Of the Silk Road, and the traffic of the ancient world", "k": "essay", "y": -130, "th": ["trade", "places", "customs"], "u": "es-21", "o": 0, "w": 983, "m": 7}, {"id": "wp-silk-road", "t": "Silk Road", "k": "reading", "y": -130, "th": ["trade", "places"], "u": "es-21", "o": 1, "w": 4696, "m": 31, "src": "https://en.wikipedia.org/wiki/Silk_Road", "rev": 1384733341, "tr": true}, {"id": "es-22", "t": "Of the rise of Christianity, from a province of Judaea to the throne of the Caesars", "k": "essay", "y": 30, "th": ["beliefs", "people", "empires"], "u": "es-22", "o": 0, "w": 1067, "m": 7}, {"id": "wp-jesus", "t": "Jesus", "k": "reading", "y": 1, "th": ["people", "beliefs"], "u": "es-22", "o": 1, "w": 4479, "m": 30, "src": "https://en.wikipedia.org/wiki/Jesus", "rev": 1387504254, "tr": true}, {"id": "es-23", "t": "Of the decline and fall of the Roman Empire in the West", "k": "essay", "y": 476, "th": ["empires"], "u": "es-23", "o": 0, "w": 1092, "m": 7}, {"id": "wp-fall-of-the-western-roman-empire", "t": "Fall of the Western Roman Empire", "k": "reading", "y": 476, "th": ["empires"], "u": "es-23", "o": 1, "w": 4575, "m": 30, "src": "https://en.wikipedia.org/wiki/Fall_of_the_Western_Roman_Empire", "rev": 1381400408, "tr": true}, {"id": "es-24", "t": "Of Constantinople, the city that the world desired", "k": "essay", "y": 330, "th": ["places", "empires", "beliefs"], "u": "es-24", "o": 0, "w": 1107, "m": 7}, {"id": "wp-constantinople", "t": "Constantinople", "k": "reading", "y": 330, "th": ["places", "empires"], "u": "es-24", "o": 1, "w": 4696, "m": 31, "src": "https://en.wikipedia.org/wiki/Constantinople", "rev": 1386802045, "tr": true}, {"id": "es-25", "t": "Of the Prophet Muhammad, and the rise of Islam", "k": "essay", "y": 610, "th": ["beliefs", "people", "empires"], "u": "es-25", "o": 0, "w": 1051, "m": 7}, {"id": "wp-muhammad", "t": "Muhammad", "k": "reading", "y": 610, "th": ["people", "beliefs"], "u": "es-25", "o": 1, "w": 4862, "m": 32, "src": "https://en.wikipedia.org/wiki/Muhammad", "rev": 1386456081, "tr": true}, {"id": "es-26", "t": "Of the House of Wisdom, and the golden age of Islamic learning", "k": "essay", "y": 800, "th": ["science", "beliefs", "places"], "u": "es-26", "o": 0, "w": 1128, "m": 8}, {"id": "wp-islamic-golden-age", "t": "Islamic Golden Age", "k": "reading", "y": 800, "th": ["science", "beliefs"], "u": "es-26", "o": 1, "w": 4467, "m": 30, "src": "https://en.wikipedia.org/wiki/Islamic_Golden_Age", "rev": 1386678621, "tr": true}, {"id": "es-27", "t": "Of Charlemagne, and of the Northmen", "k": "essay", "y": 800, "th": ["empires", "people", "trade"], "u": "es-27", "o": 0, "w": 1076, "m": 7}, {"id": "wp-charlemagne", "t": "Charlemagne", "k": "reading", "y": 800, "th": ["people", "empires"], "u": "es-27", "o": 1, "w": 4672, "m": 31, "src": "https://en.wikipedia.org/wiki/Charlemagne", "rev": 1386337766, "tr": true}, {"id": "wp-vikings", "t": "Vikings", "k": "reading", "y": 793, "th": ["empires", "trade"], "u": "es-27", "o": 2, "w": 4495, "m": 30, "src": "https://en.wikipedia.org/wiki/Vikings", "rev": 1386716928, "tr": true}, {"id": "es-28", "t": "Of gunpowder, and the end of the castle", "k": "essay", "y": 850, "th": ["inventions", "empires", "science"], "u": "es-28", "o": 0, "w": 912, "m": 6}, {"id": "wp-history-of-gunpowder", "t": "History of gunpowder", "k": "reading", "y": 850, "th": ["inventions", "empires"], "u": "es-28", "o": 1, "w": 5081, "m": 34, "src": "https://en.wikipedia.org/wiki/History_of_gunpowder", "rev": 1386995094, "tr": true}, {"id": "es-29", "t": "Of the Great Charter, and the idea that the king is under the law", "k": "essay", "y": 1215, "th": ["beliefs", "empires"], "u": "es-29", "o": 0, "w": 980, "m": 7}, {"id": "wp-magna-carta", "t": "Magna Carta", "k": "reading", "y": 1215, "th": ["beliefs", "empires"], "u": "es-29", "o": 1, "w": 4529, "m": 30, "src": "https://en.wikipedia.org/wiki/Magna_Carta", "rev": 1387058510, "tr": true}, {"id": "es-30", "t": "Of the Mongols, the greatest empire of the land", "k": "essay", "y": 1206, "th": ["empires", "people", "trade"], "u": "es-30", "o": 0, "w": 1011, "m": 7}, {"id": "wp-mongol-empire", "t": "Mongol Empire", "k": "reading", "y": 1206, "th": ["empires"], "u": "es-30", "o": 1, "w": 4556, "m": 30, "src": "https://en.wikipedia.org/wiki/Mongol_Empire", "rev": 1387279518, "tr": true}, {"id": "es-31", "t": "Of the Great Mortality, which men later called the Black Death", "k": "essay", "y": 1347, "th": ["science", "customs"], "u": "es-31", "o": 0, "w": 993, "m": 7}, {"id": "wp-black-death", "t": "Black Death", "k": "reading", "y": 1347, "th": ["science", "customs"], "u": "es-31", "o": 1, "w": 5168, "m": 34, "src": "https://en.wikipedia.org/wiki/Black_Death", "rev": 1385955157, "tr": true}, {"id": "es-32", "t": "Of the printing press, which multiplied the voice of every man", "k": "essay", "y": 1440, "th": ["inventions", "beliefs"], "u": "es-32", "o": 0, "w": 1066, "m": 7}, {"id": "wp-printing-press", "t": "Printing press", "k": "reading", "y": 1440, "th": ["inventions", "beliefs"], "u": "es-32", "o": 1, "w": 4502, "m": 30, "src": "https://en.wikipedia.org/wiki/Printing_press", "rev": 1386520326, "tr": true}, {"id": "es-33", "t": "Of the Renaissance, or the rebirth of the ancient world in Italy", "k": "essay", "y": 1400, "th": ["beliefs", "customs", "people", "places"], "u": "es-33", "o": 0, "w": 1087, "m": 7}, {"id": "wp-renaissance", "t": "Renaissance", "k": "reading", "y": 1400, "th": ["beliefs", "customs"], "u": "es-33", "o": 1, "w": 4563, "m": 30, "src": "https://en.wikipedia.org/wiki/Renaissance", "rev": 1386952823, "tr": true}, {"id": "es-34", "t": "Of the mariners, and how the oceans joined the world", "k": "essay", "y": 1492, "th": ["trade", "empires", "inventions", "customs"], "u": "es-34", "o": 0, "w": 1117, "m": 7}, {"id": "wp-age-of-discovery", "t": "Age of Discovery", "k": "reading", "y": 1492, "th": ["trade", "empires", "inventions"], "u": "es-34", "o": 1, "w": 4458, "m": 30, "src": "https://en.wikipedia.org/wiki/Age_of_Discovery", "rev": 1386677372, "tr": true}, {"id": "wp-columbian-exchange", "t": "Columbian exchange", "k": "reading", "y": 1493, "th": ["trade", "customs", "science"], "u": "es-34", "o": 2, "w": 2560, "m": 17, "src": "https://en.wikipedia.org/wiki/Columbian_exchange", "rev": 1387158566, "tr": false}, {"id": "es-35", "t": "Of coffee, tea, tobacco and chocolate: how nations acquired new habits", "k": "essay", "y": 1550, "th": ["customs", "trade"], "u": "es-35", "o": 0, "w": 1052, "m": 7}, {"id": "wp-coffeehouse", "t": "Coffeehouse", "k": "reading", "y": 1550, "th": ["customs", "trade"], "u": "es-35", "o": 1, "w": 4433, "m": 30, "src": "https://en.wikipedia.org/wiki/Coffeehouse", "rev": 1386436442, "tr": true}, {"id": "es-36", "t": "Of the Reformation, and the breaking of Western Christendom", "k": "essay", "y": 1517, "th": ["beliefs", "empires", "people"], "u": "es-36", "o": 0, "w": 1186, "m": 8}, {"id": "wp-reformation", "t": "Reformation", "k": "reading", "y": 1517, "th": ["beliefs"], "u": "es-36", "o": 1, "w": 4461, "m": 30, "src": "https://en.wikipedia.org/wiki/Reformation", "rev": 1386122806, "tr": true}, {"id": "es-37", "t": "Of the traffic in human beings across the Atlantic, and of its abolition", "k": "essay", "y": 1526, "th": ["trade", "empires", "beliefs", "customs"], "u": "es-37", "o": 0, "w": 1151, "m": 8}, {"id": "wp-atlantic-slave-trade", "t": "Atlantic slave trade", "k": "reading", "y": 1526, "th": ["trade", "empires"], "u": "es-37", "o": 1, "w": 4734, "m": 32, "src": "https://en.wikipedia.org/wiki/Atlantic_slave_trade", "rev": 1387046632, "tr": true}, {"id": "wp-abolitionism", "t": "Abolitionism", "k": "reading", "y": 1807, "th": ["beliefs"], "u": "es-37", "o": 2, "w": 5147, "m": 34, "src": "https://en.wikipedia.org/wiki/Abolitionism", "rev": 1386946946, "tr": true}, {"id": "es-38", "t": "Of the new science, from Copernicus to Newton", "k": "essay", "y": 1543, "th": ["science", "beliefs", "people"], "u": "es-38", "o": 0, "w": 1302, "m": 9}, {"id": "wp-scientific-revolution", "t": "Scientific Revolution", "k": "reading", "y": 1543, "th": ["science", "beliefs"], "u": "es-38", "o": 1, "w": 4564, "m": 30, "src": "https://en.wikipedia.org/wiki/Scientific_Revolution", "rev": 1384488981, "tr": true}, {"id": "wp-isaac-newton", "t": "Isaac Newton", "k": "reading", "y": 1687, "th": ["people", "science"], "u": "es-38", "o": 2, "w": 5701, "m": 38, "src": "https://en.wikipedia.org/wiki/Isaac_Newton", "rev": 1385567393, "tr": true}, {"id": "es-39", "t": "Of the Enlightenment, or the age that dared to know", "k": "essay", "y": 1700, "th": ["beliefs", "people"], "u": "es-39", "o": 0, "w": 966, "m": 6}, {"id": "wp-age-of-enlightenment", "t": "Age of Enlightenment", "k": "reading", "y": 1700, "th": ["beliefs"], "u": "es-39", "o": 1, "w": 4501, "m": 30, "src": "https://en.wikipedia.org/wiki/Age_of_Enlightenment", "rev": 1384839351, "tr": true}, {"id": "es-40", "t": "Of two revolutions, in America and in France", "k": "essay", "y": 1775, "th": ["empires", "beliefs", "people"], "u": "es-40", "o": 0, "w": 1125, "m": 8}, {"id": "wp-american-revolution", "t": "American Revolution", "k": "reading", "y": 1775, "th": ["empires", "beliefs"], "u": "es-40", "o": 1, "w": 4598, "m": 31, "src": "https://en.wikipedia.org/wiki/American_Revolution", "rev": 1387415362, "tr": true}, {"id": "wp-french-revolution", "t": "French Revolution", "k": "reading", "y": 1789, "th": ["empires", "beliefs"], "u": "es-40", "o": 2, "w": 4788, "m": 32, "src": "https://en.wikipedia.org/wiki/French_Revolution", "rev": 1386997471, "tr": true}, {"id": "es-41", "t": "Of steam and the manufactory: the Industrial Revolution", "k": "essay", "y": 1760, "th": ["inventions", "trade", "customs"], "u": "es-41", "o": 0, "w": 1135, "m": 8}, {"id": "wp-steam-engine", "t": "Steam engine", "k": "reading", "y": 1712, "th": ["inventions"], "u": "es-41", "o": 1, "w": 4578, "m": 31, "src": "https://en.wikipedia.org/wiki/Steam_engine", "rev": 1387306295, "tr": true}, {"id": "wp-industrial-revolution", "t": "Industrial Revolution", "k": "reading", "y": 1760, "th": ["inventions", "trade", "customs"], "u": "es-41", "o": 2, "w": 4887, "m": 33, "src": "https://en.wikipedia.org/wiki/Industrial_Revolution", "rev": 1384305441, "tr": true}, {"id": "es-42", "t": "Of Mr Darwin's book, and the place of man in nature", "k": "essay", "y": 1859, "th": ["science", "people", "beliefs"], "u": "es-42", "o": 0, "w": 1175, "m": 8}, {"id": "wp-charles-darwin", "t": "Charles Darwin", "k": "reading", "y": 1859, "th": ["people", "science"], "u": "es-42", "o": 1, "w": 4483, "m": 30, "src": "https://en.wikipedia.org/wiki/Charles_Darwin", "rev": 1382397901, "tr": true}, {"id": "es-43", "t": "Of invisible enemies: germs, vaccines and the conquest of infection", "k": "essay", "y": 1862, "th": ["science", "people"], "u": "es-43", "o": 0, "w": 1121, "m": 7}, {"id": "wp-germ-theory-of-disease", "t": "Germ theory of disease", "k": "reading", "y": 1862, "th": ["science"], "u": "es-43", "o": 1, "w": 2806, "m": 19, "src": "https://en.wikipedia.org/wiki/Germ_theory_of_disease", "rev": 1387061851, "tr": false}, {"id": "wp-history-of-penicillin", "t": "History of penicillin", "k": "reading", "y": 1928, "th": ["science"], "u": "es-43", "o": 2, "w": 4584, "m": 31, "src": "https://en.wikipedia.org/wiki/History_of_penicillin", "rev": 1376463778, "tr": true}, {"id": "es-44", "t": "Of the speaking telegraph, the engine that burns within, and the electric light: the inventions of my own day", "k": "essay", "y": 1876, "th": ["inventions", "customs", "science"], "u": "es-44", "o": 0, "w": 1317, "m": 9}, {"id": "wp-invention-of-the-telephone", "t": "Invention of the telephone", "k": "reading", "y": 1876, "th": ["inventions"], "u": "es-44", "o": 1, "w": 4512, "m": 30, "src": "https://en.wikipedia.org/wiki/Invention_of_the_telephone", "rev": 1386867483, "tr": true}, {"id": "wp-internal-combustion-engine", "t": "Internal combustion engine", "k": "reading", "y": 1876, "th": ["inventions"], "u": "es-44", "o": 2, "w": 4442, "m": 30, "src": "https://en.wikipedia.org/wiki/Internal_combustion_engine", "rev": 1386728852, "tr": true}, {"id": "wp-electrification", "t": "Electrification", "k": "reading", "y": 1882, "th": ["inventions", "customs"], "u": "es-44", "o": 3, "w": 4734, "m": 32, "src": "https://en.wikipedia.org/wiki/Electrification", "rev": 1385025455, "tr": true}, {"id": "es-45", "t": "Of the votes of women, and the long argument about half of mankind", "k": "essay", "y": 1893, "th": ["beliefs", "customs", "people"], "u": "es-45", "o": 0, "w": 990, "m": 7}, {"id": "wp-women-s-suffrage", "t": "Women's suffrage", "k": "reading", "y": 1893, "th": ["beliefs", "customs"], "u": "es-45", "o": 1, "w": 3590, "m": 24, "src": "https://en.wikipedia.org/wiki/Women%27s_suffrage", "rev": 1387485592, "tr": false}, {"id": "es-46", "t": "Of the Great War of nineteen fourteen, and the revolution in Russia", "k": "essay", "y": 1914, "th": ["empires", "beliefs"], "u": "es-46", "o": 0, "w": 1141, "m": 8}, {"id": "wp-world-war-i", "t": "World War I", "k": "reading", "y": 1914, "th": ["empires"], "u": "es-46", "o": 1, "w": 4629, "m": 31, "src": "https://en.wikipedia.org/wiki/World_War_I", "rev": 1387047077, "tr": true}, {"id": "wp-russian-revolution", "t": "Russian Revolution", "k": "reading", "y": 1917, "th": ["empires", "beliefs"], "u": "es-46", "o": 2, "w": 4636, "m": 31, "src": "https://en.wikipedia.org/wiki/Russian_Revolution", "rev": 1385566278, "tr": true}, {"id": "es-47", "t": "Of the Second and greater war, and of the splitting of the atom", "k": "essay", "y": 1939, "th": ["empires", "science"], "u": "es-47", "o": 0, "w": 1230, "m": 8}, {"id": "wp-world-war-ii", "t": "World War II", "k": "reading", "y": 1939, "th": ["empires"], "u": "es-47", "o": 1, "w": 4506, "m": 30, "src": "https://en.wikipedia.org/wiki/World_War_II", "rev": 1387271466, "tr": true}, {"id": "wp-manhattan-project", "t": "Manhattan Project", "k": "reading", "y": 1942, "th": ["science", "empires"], "u": "es-47", "o": 2, "w": 4442, "m": 30, "src": "https://en.wikipedia.org/wiki/Manhattan_Project", "rev": 1384063802, "tr": true}, {"id": "es-48", "t": "Of the calculating engines, from Mr Babbage to Mr Turing", "k": "essay", "y": 1936, "th": ["inventions", "science", "people"], "u": "es-48", "o": 0, "w": 1211, "m": 8}, {"id": "wp-alan-turing", "t": "Alan Turing", "k": "reading", "y": 1936, "th": ["people", "science", "inventions"], "u": "es-48", "o": 1, "w": 4779, "m": 32, "src": "https://en.wikipedia.org/wiki/Alan_Turing", "rev": 1386918204, "tr": true}, {"id": "wp-history-of-computing-hardware", "t": "History of computing hardware", "k": "reading", "y": 1940, "th": ["inventions", "science"], "u": "es-48", "o": 2, "w": 5360, "m": 36, "src": "https://en.wikipedia.org/wiki/History_of_computing_hardware", "rev": 1386933037, "tr": true}, {"id": "es-49", "t": "Of the cold peace, and of the journey to the moon", "k": "essay", "y": 1947, "th": ["empires", "science", "inventions"], "u": "es-49", "o": 0, "w": 995, "m": 7}, {"id": "wp-cold-war", "t": "Cold War", "k": "reading", "y": 1947, "th": ["empires"], "u": "es-49", "o": 1, "w": 4624, "m": 31, "src": "https://en.wikipedia.org/wiki/Cold_War", "rev": 1386377813, "tr": true}, {"id": "wp-space-race", "t": "Space Race", "k": "reading", "y": 1957, "th": ["science", "empires", "inventions"], "u": "es-49", "o": 2, "w": 4511, "m": 30, "src": "https://en.wikipedia.org/wiki/Space_Race", "rev": 1387499626, "tr": true}, {"id": "es-50", "t": "Of the web of wires, which the men of the future call the internet", "k": "essay", "y": 1969, "th": ["inventions", "customs", "science"], "u": "es-50", "o": 0, "w": 1178, "m": 8}, {"id": "wp-history-of-the-internet", "t": "History of the internet", "k": "reading", "y": 1969, "th": ["inventions", "customs"], "u": "es-50", "o": 1, "w": 4933, "m": 33, "src": "https://en.wikipedia.org/wiki/History_of_the_internet", "rev": 1385000264, "tr": true}, {"id": "es-51", "t": "Of thinking machines, and whether they think", "k": "essay", "y": 2020, "th": ["science", "inventions", "beliefs"], "u": "es-51", "o": 0, "w": 1304, "m": 9}, {"id": "wp-history-of-artificial-intelligence", "t": "History of artificial intelligence", "k": "reading", "y": 1956, "th": ["science", "inventions", "beliefs"], "u": "es-51", "o": 1, "w": 4675, "m": 31, "src": "https://en.wikipedia.org/wiki/History_of_artificial_intelligence", "rev": 1384400119, "tr": true}, {"id": "es-52", "t": "Dr Thornleigh's closing reflections, written late at night", "k": "essay", "y": 2030, "th": ["beliefs"], "u": "es-52", "o": 0, "w": 591, "m": 4}]};</script>
+<script>// History by Ear: UI and hands-free speech player. Speech engine pattern from Maths by Ear v3 (short chunks, watchdog,
+// speech primed inside the first tap, wake lock, optional near-silent keep-alive sound, media session controls).
+(function () {
+  'use strict';
+  const C = window.HBCore;
+  const $ = id => document.getElementById(id);
+  const K = 'hbe.v1.';
+  const load = (k, d) => { try { const v = localStorage.getItem(K + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } };
+  const save = (k, v) => { try { localStorage.setItem(K + k, JSON.stringify(v)); } catch (e) {} };
+  const DEFAULTS = { voiceURI: '', rate: 0.9, gap: 3, titles: true, wakeLock: true, keepAlive: false, readings: true, sleep: 'off' };
+  let S = Object.assign({}, DEFAULTS, load('settings', {}));
+  const saveS = () => save('settings', S);
+  const IDX = window.HB_INDEX || { pieces: [] };
+  const P = IDX.pieces, BY = {}; P.forEach(p => { BY[p.id] = p; });
+  const texts = {};
+  const st = { mode: null, list: [], pos: 0, para: 0, chunk: 0, chunks: null, playing: false, token: 0, utter: null, uStart: 0, uExpect: 0, retries: 0, sleepAt: 0, stopAtEnd: false, wake: null, seed: 0, primed: false, phase: 'text' };
+  window.HBE = { st, S: () => S, idx: () => IDX }; // for tests
+
+  function announce(msg) { const l = $('live'); l.textContent = ''; setTimeout(() => { l.textContent = msg; }, 60); }
+  function setNow(msg) { $('now').textContent = msg; }
+  function el(tag, attrs, ...kids) { const e = document.createElement(tag); for (const k in (attrs || {})) { if (k === 'text') e.textContent = attrs[k]; else if (k.startsWith('on')) e.addEventListener(k.slice(2), attrs[k]); else e.setAttribute(k, attrs[k]); } kids.forEach(k => k && e.append(k)); return e; }
+  const kindWord = p => p.k === 'essay' ? "Dr Thornleigh's essay" : 'A reading from the Encyclopaedia';
+  const modeName = id => { const m = C.MODES.find(x => x.id === id); return m ? m.name : ''; };
+
+  async function textOf(id) {
+    if (texts[id]) return texts[id];
+    const r = await fetch('t/' + id + '.json'); if (!r.ok) throw new Error('missing ' + id);
+    const d = await r.json(); texts[id] = d.p; return d.p;
+  }
+
+  // ---------- voices ----------
+  let voices = [];
+  function synth() { return window.speechSynthesis; }
+  function refreshVoices() {
+    if (!synth()) return;
+    voices = synth().getVoices() || [];
+    const sel = $('s-voice'); sel.innerHTML = '';
+    const en = voices.filter(v => /^en/i.test(v.lang));
+    const gb = en.filter(v => /GB/i.test(v.lang)), other = en.filter(v => !/GB/i.test(v.lang));
+    sel.append(el('option', { value: '', text: 'Automatic: the best British English voice' }));
+    [...gb, ...other].forEach(v => sel.append(el('option', { value: v.voiceURI, text: `${v.name} (${v.lang})` })));
+    sel.value = voices.some(v => v.voiceURI === S.voiceURI) ? S.voiceURI : '';
+  }
+  function pickVoice() {
+    if (S.voiceURI) { const v = voices.find(x => x.voiceURI === S.voiceURI); if (v) return v; }
+    const gb = voices.filter(v => /en[-_]GB/i.test(v.lang));
+    return gb.find(v => /premium|enhanced/i.test(v.name)) || gb.find(v => /daniel|arthur|oliver|serena|kate|martha|stephanie/i.test(v.name)) || gb[0] || voices.find(v => /^en/i.test(v.lang)) || null;
+  }
+
+  // ---------- speech engine: short chunks with a watchdog ----------
+  function speak(text, done) {
+    const sy = synth(); const tok = ++st.token;
+    if (!sy) { setTimeout(() => tok === st.token && done(), 50); return; }
+    const u = new SpeechSynthesisUtterance(text);
+    const v = pickVoice(); if (v) u.voice = v; u.lang = (v && v.lang) || 'en-GB'; u.rate = S.rate; u.pitch = 1; u.volume = 1;
+    let finished = false;
+    const fin = () => { if (finished || tok !== st.token) return; finished = true; st.utter = null; st.retries = 0; done(); };
+    u.onend = fin; u.onerror = e => { if (e && (e.error === 'interrupted' || e.error === 'canceled')) return; fin(); };
+    st.utter = u; st.uText = text; st.uDone = done; st.uStart = Date.now(); st.uExpect = 3000 + text.length * 85 / Math.max(0.3, S.rate);
+    try { sy.speak(u); } catch (e) { setTimeout(fin, 100); }
+  }
+  function primeSpeech() { if (st.primed) return; st.primed = true; try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; synth() && synth().speak(u); } catch (e) {} }
+  function stopSpeech() { st.token++; st.utter = null; clearTimeout(st.waitTimer); try { synth() && synth().cancel(); } catch (e) {} }
+  function wait(ms, done) { const tok = ++st.token; st.waitTimer = setTimeout(() => { if (tok === st.token) done(); }, ms); }
+  function watchdog() {
+    if (st.playing && st.utter) {
+      const age = Date.now() - st.uStart, sy = synth();
+      const stalled = age > st.uExpect * 2 + 4000 || (age > 4000 && sy && !sy.speaking && !sy.pending);
+      if (stalled) {
+        const text = st.uText, done = st.uDone; st.retries++;
+        if (st.retries > 2) { st.retries = 0; stopSpeech(); done(); }
+        else { stopSpeech(); try { sy.resume(); } catch (e) {} speak(text, done); }
+      }
+    }
+    if (st.playing && st.sleepAt && Date.now() >= st.sleepAt) { st.sleepAt = 0; sleepNow(); }
+  }
+  setInterval(watchdog, 1500);
+
+  // ---------- player ----------
+  function current() { return BY[st.list[st.pos]]; }
+  function persist() { if (st.list.length) save('resume', JSON.parse(C.encodeResume({ mode: st.mode, list: st.list, pos: st.pos, para: st.para, seed: st.seed, at: Date.now() }))); }
+  function titleLine(p) { return `${kindWord(p)}: ${p.t}. About ${C.fmtMinutes(p.m)}.`; }
+  function updateUI() {
+    $('b-play').textContent = st.playing ? 'Pause' : 'Play';
+    $('b-play').setAttribute('aria-label', st.playing ? 'Pause' : (st.list.length ? 'Play: carry on where you left off' : 'Play: begin the Grand Chronological Journey'));
+    const p = current();
+    $('journey').textContent = st.mode ? `Journey: ${modeName(st.mode)}. ${p ? `Piece ${st.pos + 1} of ${st.list.length}: ${p.t}.` : ''}` : 'No journey chosen yet. Play begins the Grand Chronological Journey.';
+    const ol = $('upnext'); ol.innerHTML = '';
+    st.list.slice(st.pos + 1, st.pos + 6).forEach(id => { const b = BY[id]; if (b) ol.append(el('li', { text: `${b.t}. ${kindWord(b)}, about ${C.fmtMinutes(b.m)}.` })); });
+    if (!ol.children.length) ol.append(el('li', { text: st.mode && C.loops(st.mode) ? 'A fresh shuffle will follow.' : 'Nothing more queued.' }));
+  }
+  function mediaMeta(p) { if (!('mediaSession' in navigator) || !p) return; try { navigator.mediaSession.metadata = new MediaMetadata({ title: p.t, artist: 'Dr Edmund Thornleigh', album: 'History by Ear' }); } catch (e) {} }
+
+  async function startPiece() {
+    const p = current(); if (!p) return endList();
+    let paras;
+    try { paras = await textOf(p.id); } catch (e) { setNow('Could not load this piece. Check the internet connection.'); announce('Could not load this piece.'); pause(true); return; }
+    if (!st.playing || current() !== p) return;
+    st.paras = paras; if (st.para >= paras.length) st.para = 0;
+    st.chunks = null; st.chunk = 0;
+    setNow(`Now playing ${st.pos + 1} of ${st.list.length}: ${p.t}. ${kindWord(p)}.`);
+    mediaMeta(p); updateUI(); persist();
+    const nxt = st.list[st.pos + 1]; if (nxt) textOf(nxt).catch(() => {});
+    if (st.para === 0 && S.titles) speak(titleLine(p), () => wait(600, step)); else step();
+  }
+  function step() {
+    if (!st.playing) return;
+    const paras = st.paras;
+    if (st.para >= paras.length) return pieceDone();
+    const raw = paras[st.para];
+    if (!st.chunks) { st.chunks = C.chunks(C.paraText(raw)); st.chunk = 0; }
+    if (st.chunk >= st.chunks.length) {
+      const kind = C.paraKind(raw);
+      st.para++; st.chunks = null; persist();
+      return wait(kind === 'heading' ? 700 : kind === 'aside' ? 600 : 350, step);
+    }
+    const t = st.chunks[st.chunk++];
+    speak(C.paraKind(raw) === 'heading' && st.chunk === 1 ? t.replace(/[.:]?$/, '.') : t, step);
+  }
+  function pieceDone() {
+    const p = current(); const log = load('heard', []); if (p) { log.push(p.id); save('heard', log.slice(-500)); }
+    if (st.stopAtEnd) { st.stopAtEnd = false; S.sleep = 'off'; saveS(); $('s-sleep').value = 'off'; st.pos++; st.para = 0; persist(); pause(true); setNow('Stopped at the end of the piece, as you asked. Good night.'); announce('Stopped at the end of the piece.'); return; }
+    st.pos++; st.para = 0; persist();
+    if (st.pos >= st.list.length) return endList();
+    wait(S.gap * 1000, startPiece);
+  }
+  function endList() {
+    if (C.loops(st.mode)) {
+      const last = st.list[st.list.length - 1]; st.seed = (st.seed * 31 + 7) >>> 0 || 1;
+      st.list = C.build(P, st.mode, { seed: st.seed, readings: S.readings, avoidFirst: last }); st.pos = 0; st.para = 0; persist();
+      speak('That completes the shuffle. Dr Thornleigh shuffles his notes and carries on.', () => wait(800, startPiece));
+      return;
+    }
+    stopSpeech(); st.playing = false; releaseNight();
+    speak('That is the end of the journey. Thank you for listening.', () => {});
+    st.list = []; st.pos = 0; st.para = 0; save('resume', null);
+    setNow('The journey is finished. Choose another below, or press Play to begin again.'); updateUI();
+  }
+  function sleepNow() { pause(true); setNow('The sleep timer has stopped the reading. Press Play to carry on where you left off.'); announce('Sleep timer: stopped.'); S.sleep = 'off'; saveS(); $('s-sleep').value = 'off'; }
+  function armSleep() { st.stopAtEnd = S.sleep === 'end'; st.sleepAt = 0; const m = parseFloat(S.sleep); if (m > 0) st.sleepAt = Date.now() + m * 60000; }
+
+  function startMode(modeId, quiet) {
+    st.seed = (Date.now() >>> 0) || 1; st.mode = modeId;
+    st.list = C.build(P, modeId, { seed: st.seed, readings: S.readings }); st.pos = 0; st.para = 0;
+    persist(); if (!quiet) announce(`${modeName(modeId)}. ${C.fmtHours(C.minutesOf(P, st.list))}.`);
+  }
+  function play() {
+    primeSpeech();
+    if (!st.list.length) { const r = C.decodeResume(load('resume', null), P); if (r) Object.assign(st, { mode: r.mode, list: r.list, pos: r.pos, para: r.para, seed: r.seed || 1 }); else startMode('journey', true); }
+    stopSpeech(); st.playing = true; armSleep(); keepNight(); updateUI(); startPiece();
+  }
+  function pause(silent) {
+    st.playing = false; stopSpeech(); releaseNight(); persist(); updateUI();
+    if (!silent) { const p = current(); announce('Paused'); setNow(p ? `Paused: ${p.t}. Press Play to carry on.` : 'Paused.'); }
+  }
+  function toggle() { st.playing ? pause() : play(); }
+  function jumpPiece(d) {
+    if (!st.list.length) return;
+    st.pos = Math.min(Math.max(0, st.pos + d), st.list.length - 1); st.para = 0; persist(); updateUI();
+    if (st.playing) { stopSpeech(); startPiece(); } else { const p = current(); setNow(`Ready: ${p.t}. Press Play.`); announce(p.t); }
+  }
+  function jumpPara(d) {
+    if (!st.list.length) return;
+    st.para = Math.max(0, st.para + d); st.chunks = null; persist();
+    if (st.playing) { stopSpeech(); if (!st.paras || st.para >= st.paras.length) return pieceDone(); step(); } else announce(d > 0 ? 'Forward one paragraph.' : 'Back one paragraph.');
+  }
+  function whatsPlaying() {
+    const p = current(); if (!p) { announce('Nothing is playing. Press Play to begin the Grand Chronological Journey.'); return; }
+    const total = st.paras ? st.paras.length : 0;
+    let left = 0; for (let i = st.pos + 1; i < st.list.length; i++) left += (BY[st.list[i]] || { m: 0 }).m;
+    const msg = `${p.t}. ${kindWord(p)}. ${total ? `Paragraph ${Math.min(st.para + 1, total)} of ${total}. ` : ''}Piece ${st.pos + 1} of ${st.list.length} in ${modeName(st.mode)}. About ${C.fmtHours(left)} more after this.`;
+    setNow(msg); announce(msg);
+  }
+
+  // ---------- keeping going: wake lock, keep-alive sound, media session ----------
+  async function keepNight() {
+    if (S.wakeLock && 'wakeLock' in navigator && !st.wake) { try { st.wake = await navigator.wakeLock.request('screen'); st.wake.addEventListener('release', () => { st.wake = null; }); } catch (e) { st.wake = null; } }
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+    if (S.keepAlive) startKeepAlive();
+    if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+  }
+  function releaseNight() {
+    if (st.wake) { try { st.wake.release(); } catch (e) {} st.wake = null; }
+    stopKeepAlive();
+    if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+  }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && st.playing) { keepNight(); if (synth() && !synth().speaking && st.utter) { stopSpeech(); st.chunk = Math.max(0, st.chunk - 1); step(); } } });
+  let ka = null;
+  function quietWavUrl() {
+    const n = 16000, buf = new ArrayBuffer(44 + n * 2), d = new DataView(buf);
+    const w = (o, s) => { for (let i = 0; i < s.length; i++) d.setUint8(o + i, s.charCodeAt(i)); };
+    w(0, 'RIFF'); d.setUint32(4, 36 + n * 2, true); w(8, 'WAVEfmt '); d.setUint32(16, 16, true); d.setUint16(20, 1, true); d.setUint16(22, 1, true);
+    d.setUint32(24, 8000, true); d.setUint32(28, 16000, true); d.setUint16(32, 2, true); d.setUint16(34, 16, true); w(36, 'data'); d.setUint32(40, n * 2, true);
+    for (let i = 0; i < n; i++) d.setInt16(44 + i * 2, ((i * 7919) % 7) - 3, true);
+    return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+  }
+  function startKeepAlive() { if (!ka) { ka = new Audio(quietWavUrl()); ka.loop = true; ka.volume = 0.05; } ka.play().catch(() => {}); }
+  function stopKeepAlive() { if (ka) { try { ka.pause(); } catch (e) {} } }
+  function mediaHandlers() {
+    if (!('mediaSession' in navigator)) return;
+    const h = { play: () => play(), pause: () => pause(), nexttrack: () => jumpPiece(1), previoustrack: () => jumpPiece(-1), seekforward: () => jumpPara(1), seekbackward: () => jumpPara(-1), stop: () => pause() };
+    for (const k in h) { try { navigator.mediaSession.setActionHandler(k, h[k]); } catch (e) {} }
+  }
+
+  // ---------- views ----------
+  function renderModes() {
+    const box = { main: $('modes-main'), themes: $('modes-themes'), pp: $('modes-pp') };
+    C.MODES.forEach(m => {
+      const where = m.theme === 'people' || m.theme === 'places' ? box.pp : m.theme ? box.themes : box.main;
+      const mins = C.minutesOf(P, C.build(P, m.id, { seed: 1, readings: S.readings }));
+      const b = el('button', { 'data-mode': m.id, text: `${m.name}. ${C.fmtHours(mins)}. ${m.desc}`, onclick: () => { startMode(m.id); play(); $('h-player').focus(); } });
+      where.append(b);
+    });
+  }
+  function refreshModeLengths() { document.querySelectorAll('button[data-mode]').forEach(b => { const m = C.MODES.find(x => x.id === b.dataset.mode); b.textContent = `${m.name}. ${C.fmtHours(C.minutesOf(P, C.build(P, m.id, { seed: 1, readings: S.readings })))}. ${m.desc}`; }); }
+  function renderLibrary() {
+    const lib = $('library'); lib.innerHTML = '';
+    const order = C.build(P, 'journey', { readings: true }); let lastEra = '', ul = null;
+    order.forEach(id => {
+      const p = BY[id], e = C.era(BY[p.u].y);
+      if (e !== lastEra) { lastEra = e; lib.append(el('h3', { text: e })); ul = el('ul', { class: 'plain lib' }); lib.append(ul); }
+      ul.append(el('li', {},
+        el('p', { text: `${p.t}. ${kindWord(p)}, about ${C.fmtMinutes(p.m)}.` }),
+        el('div', { class: 'row' },
+          el('button', { 'aria-label': `Play from here: ${p.t}`, text: 'Play from here', onclick: () => playFrom(id) }),
+          el('button', { class: 'quiet', 'aria-label': `Read the text: ${p.t}`, text: 'Read the text', onclick: () => readText(id) }))));
+    });
+  }
+  function playFrom(id) {
+    st.mode = 'journey'; st.seed = 1; st.list = C.build(P, 'journey', { readings: S.readings || BY[id].k === 'reading' });
+    if (!st.list.includes(id)) st.list = C.build(P, 'journey', { readings: true });
+    st.pos = st.list.indexOf(id); st.para = 0; persist(); play(); $('h-player').focus();
+  }
+  async function readText(id) {
+    const p = BY[id]; let paras;
+    try { paras = await textOf(id); } catch (e) { announce('Could not load the text.'); return; }
+    const r = $('reader'); r.innerHTML = '';
+    r.append(el('h3', { text: p.t }), el('p', { class: 'meta', text: `${kindWord(p)}. About ${C.fmtMinutes(p.m)} of listening.` }));
+    if (p.src) r.append(el('p', { class: 'meta' }, document.createTextNode('Source: '), el('a', { href: p.src, text: `Wikipedia, ${p.t}` }), document.createTextNode(', CC BY-SA 4.0.')));
+    paras.forEach(x => { const k = C.paraKind(x), t = C.paraText(x); r.append(k === 'heading' ? el('h4', { text: t }) : el('p', { class: k === 'aside' ? 'aside' : '', text: k === 'aside' ? 'Dr Thornleigh: ' + t : t })); });
+    $('v-reader').hidden = false; st.returnTo = document.activeElement; $('h-reader').textContent = 'Reading: ' + p.t; $('h-reader').focus();
+  }
+  function closeReader() { $('v-reader').hidden = true; (st.returnTo && st.returnTo.isConnected ? st.returnTo : $('h-library')).focus(); }
+  function renderAbout() {
+    const E = P.filter(p => p.k === 'essay'), R = P.filter(p => p.k === 'reading');
+    const hrs = L => C.fmtHours(L.reduce((n, p) => n + p.m, 0));
+    const a = $('about'); a.innerHTML = '';
+    [
+      "Your narrator is Dr Edmund Thornleigh, a fictional Victorian historian. He writes in the year 1875 from his house on Lansdown Crescent in Bath, with his housekeeper Mrs Pruett and his old spaniel Tacitus. He writes in the long, dry, ironic manner of Edward Gibbon, the author of The History of the Decline and Fall of the Roman Empire.",
+      "He tells all of history, including the years after 1875, because pages of a great Encyclopaedia of the future arrive mysteriously on his desk. He says plainly when he is relying on them.",
+      `There are two kinds of piece. ${E.length} essays are written in Dr Thornleigh's own words, ${hrs(E)} of listening, written for this app. ${R.length} readings are articles from Wikipedia, ${hrs(R)} of listening, read in Wikipedia's own words with his short introductions, occasional remarks and a closing credit. Long articles are read in their principal parts.`,
+      'Foreign words: he always translates the foreign phrases he quotes. In the readings, spellings in other alphabets and pronunciation guides are left out, and dates are given as B C and A D. A few foreign names and terms remain in the readings, usually with their meaning beside them.',
+      'The voice is your phone\'s own speech voice. Choose it, and the speed, in Settings. The app remembers where you were, even if you close it.',
+      'Not yet tested on a real iPhone or with VoiceOver. The iPhone may pause speech when the screen locks; the Settings include a way to keep the screen awake and an experimental background sound that may help.'
+    ].forEach(t => a.append(el('p', { text: t })));
+    const c = $('credits'); c.innerHTML = '';
+    c.append(el('p', { text: "Dr Thornleigh's essays, his introductions and remarks, and the app itself were written for Ahsan Ali in November 2026. Dr Thornleigh and his household are fictional; the history is meant to be accurate." }));
+    c.append(el('p', { text: 'The readings are adapted for listening from these Wikipedia articles, written by Wikipedia\'s contributors and shared under the Creative Commons Attribution-ShareAlike 4.0 licence. The adapted readings are shared under the same licence. Each link opens the article; the revision number is the version that was used.' }));
+    c.append(el('p', {}, el('a', { href: 'https://creativecommons.org/licenses/by-sa/4.0/', text: 'Creative Commons Attribution-ShareAlike 4.0 licence' })));
+    const ul = el('ul', {}); R.slice().sort(C.byTime).forEach(p => ul.append(el('li', {}, el('a', { href: p.src, text: `${p.t}, Wikipedia` }), document.createTextNode(`, revision ${p.rev}${p.tr ? ', principal parts read' : ''}.`)))); c.append(ul);
+    c.append(el('p', { text: 'No sounds or images are used. All speech is made by your phone.' }));
+  }
+  function renderSettings() {
+    refreshVoices(); if (synth()) synth().onvoiceschanged = refreshVoices;
+    $('s-voice').onchange = e => { S.voiceURI = e.target.value; saveS(); };
+    const r = $('s-rate'); r.value = S.rate;
+    const lab = () => { $('l-rate').textContent = `Speaking speed: ${Math.round(S.rate * 100)} per cent`; r.setAttribute('aria-valuetext', `${Math.round(S.rate * 100)} per cent`); };
+    lab(); r.oninput = () => { S.rate = parseFloat(r.value); saveS(); lab(); };
+    $('s-gap').value = String(S.gap); $('s-gap').onchange = e => { S.gap = parseFloat(e.target.value); saveS(); };
+    [['s-titles', 'titles'], ['s-wake', 'wakeLock'], ['s-keep', 'keepAlive'], ['s-readings', 'readings']].forEach(([id, k]) => { const x = $(id); x.checked = !!S[k]; x.onchange = () => { S[k] = x.checked; saveS(); if (k === 'readings') { refreshModeLengths(); announce(x.checked ? 'Readings included.' : 'Only Dr Thornleigh\'s own essays.'); } if (k === 'keepAlive' && !x.checked) stopKeepAlive(); }; });
+    $('s-sleep').value = S.sleep; $('s-sleep').onchange = e => { S.sleep = e.target.value; saveS(); armSleep(); announce(S.sleep === 'off' ? 'Sleep timer off.' : 'Sleep timer set.'); };
+    $('b-test').onclick = () => { if (st.playing) pause(true); primeSpeech(); stopSpeech(); speak('Good evening. I am Dr Edmund Thornleigh, and this is the voice in which I shall tell you the history of mankind.', () => {}); };
+    $('b-forget').onclick = () => { pause(true); save('resume', null); st.list = []; st.mode = null; st.pos = 0; st.para = 0; updateUI(); announce('Forgotten. Play will begin the Grand Chronological Journey from the start.'); };
+    $('b-save').onclick = async () => {
+      announce('Saving every piece. This may take a minute.'); let n = 0;
+      for (const p of P) { try { await textOf(p.id); n++; } catch (e) {} }
+      announce(n === P.length ? (navigator.serviceWorker && navigator.serviceWorker.controller ? 'All pieces are saved on this phone.' : 'All pieces are loaded for this visit.') : 'Some pieces could not be saved. Check the internet connection.');
+    };
+  }
+  function bind() {
+    $('b-play').onclick = toggle;
+    $('b-prev').onclick = () => jumpPiece(-1); $('b-next').onclick = () => jumpPiece(1);
+    $('b-pback').onclick = () => jumpPara(-1); $('b-pfwd').onclick = () => jumpPara(1);
+    $('b-what').onclick = whatsPlaying;
+    $('b-readnow').onclick = () => { const p = current(); if (p) readText(p.id); else announce('Nothing is playing yet.'); };
+    $('b-closeread').onclick = closeReader; $('b-closeread2').onclick = closeReader;
+  }
+  function init() {
+    bind(); renderModes(); renderLibrary(); renderAbout(); renderSettings(); mediaHandlers();
+    const r = C.decodeResume(load('resume', null), P);
+    if (r) { Object.assign(st, { mode: r.mode, list: r.list, pos: r.pos, para: r.para, seed: r.seed || 1 }); setNow(`Welcome back. Press Play to carry on with ${BY[r.list[r.pos]].t}, in ${modeName(r.mode)}.`); }
+    else setNow(`Welcome. ${P.length} pieces, ${C.fmtHours(P.reduce((n, p) => n + p.m, 0))} of history. Press Play to begin the Grand Chronological Journey, or choose a journey below.`);
+    updateUI();
+    if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+    document.body.dataset.ready = '1';
+  }
+  init();
+})();
+</script>
+</body>
+</html>
